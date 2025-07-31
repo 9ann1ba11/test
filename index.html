@@ -108,25 +108,39 @@
 </head>
 <body class="min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="bg-white shadow-sm py-4 px-6 flex items-center justify-between">
-        <div class="flex items-center">
-            <div class="bg-primary w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xl">УР</div>
-            <h1 class="ml-3 text-xl font-bold text-gray-800">Учитель Рядом</h1>
+    <header class="bg-white shadow-sm py-3 px-4 sm:py-4 sm:px-6 flex items-center justify-between">
+    <div class="flex items-center">
+        <!-- Логотип -->
+        <div class="bg-primary w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xl">УР</div>
+
+        <!-- Название на desktop / ФИО на mobile -->
+        <div class="ml-3">
+            <!-- Desktop: Учитель Рядом -->
+            <h1 class="hidden md:block text-xl font-bold text-gray-800">Учитель Рядом</h1>
+            <!-- Mobile: ФИО -->
+            <span class="block md:hidden text-sm font-semibold text-gray-800">Анна Иванова</span>
         </div>
-        
-        <div class="flex items-center">
-            <div class="hidden md:flex flex-col items-end mr-4">
-                <span class="font-semibold text-gray-800">Анна Иванова</span>
-                <span class="text-sm text-gray-500">Преподаватель математики</span>
-            </div>
-            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                <i class="fas fa-user text-gray-600"></i>
-            </div>
-            <button class="ml-4 md:hidden text-gray-600" id="mobile-menu-toggle">
-                <i class="fas fa-bars text-xl"></i>
-            </button>
+    </div>
+
+    <div class="flex items-center">
+        <!-- Desktop: ФИО и должность -->
+        <div class="hidden md:flex flex-col items-end mr-4">
+            <span class="font-semibold text-gray-800">Анна Иванова</span>
+            <span class="text-sm text-gray-500">Преподаватель математики</span>
         </div>
-    </header>
+
+        <!-- Иконка профиля -->
+        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+            <i class="fas fa-user text-gray-600"></i>
+        </div>
+
+        <!-- Кнопка бургер-меню -->
+        <button class="ml-4 md:hidden text-gray-600" id="mobile-menu-toggle">
+            <i class="fas fa-bars text-xl"></i>
+        </button>
+    </div>
+</header>
+
 
     <!-- Main Content -->
     <div class="flex flex-1 overflow-hidden">

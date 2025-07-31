@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учитель Рядом - Личный кабинет</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#D1D5DB',
+                        accent: '#EF4444',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        background: '#F9FAFB',
+                        card: '#FFFFFF'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F9FAFB;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1/1;
+        }
+        
+        .time-slot {
+            height: 40px;
+        }
+        
+        .message-sent {
+            background-color: #EFF6FF;
+            border-radius: 12px 12px 0 12px;
+            margin-left: 20%;
+        }
+        
+        .message-received {
+            background-color: #F3F4F6;
+            border-radius: 12px 12px 12px 0;
+            margin-right: 20%;
+        }
+        
+        .achievement-badge {
+            transition: all 0.3s ease;
+        }
+        
+        .achievement-badge:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -100%;
+                transition: left 0.3s ease;
+                z-index: 100;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            .mobile-menu-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 99;
+            }
+            
+            .mobile-menu-overlay.active {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white shadow-sm py-4 px-6 flex items-center justify-between">
+        <div class="flex items-center">
+            <div class="bg-primary w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xl">УР</div>
+            <h1 class="ml-3 text-xl font-bold text-gray-800">Учитель Рядом</h1>
+        </div>
+        
+        <div class="flex items-center">
+            <div class="hidden md:flex flex-col items-end mr-4">
+                <span class="font-semibold text-gray-800">Анна Иванова</span>
+                <span class="text-sm text-gray-500">Преподаватель математики</span>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                <i class="fas fa-user text-gray-600"></i>
+            </div>
+            <button class="ml-4 md:hidden text-gray-600" id="mobile-menu-toggle">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar (Desktop) -->
+        <aside class="sidebar w-64 bg-white shadow-md h-full hidden md:block overflow-y-auto">
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <button class="w-full flex items-center p-3 rounded-lg bg-primary text-white tab-button active" data-tab="schedule">
+                            <i class="fas fa-calendar-alt mr-3"></i>
+                            <span>Расписание</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="w-full flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100 tab-button" data-tab="lessons">
+                            <i class="fas fa-book-open mr-3"></i>
+                            <span>Уроки</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="w-full flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100 tab-button" data-tab="chat">
+                            <i class="fas fa-comments mr-3"></i>
+                            <span>Чат</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="w-full flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100 tab-button" data-tab="analytics">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            <span>Аналитика</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="w-full flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100 tab-button" data-tab="settings">
+                            <i class="fas fa-cog mr-3"></i>
+                            <span>Настройки</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Mobile Menu Overlay -->
+        <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-6">
+            <!-- Schedule Tab -->
+            <div id="schedule" class="tab-content active">
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Расписание</h2>
+                        <button class="bg-primary text-white px-4 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span>Добавить слот</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Calendar -->
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-700">Июнь 2025</h3>
+                            <div class="flex space-x-2">
+                                <button class="p-2 rounded-lg hover:bg-gray-100">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button class="p-2 rounded-lg hover:bg-gray-100">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-7 gap-1 mb-2">
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">Пн</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">Вт</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">Ср</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">Чт</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">Пт</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">Сб</div>
+                            <div class="text-center text-sm font-medium text-gray-500 py-2">Вс</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-7 gap-1">
+                            <!-- Empty days -->
+                            <div class="calendar-day"></div>
+                            <div class="calendar-day"></div>
+                            <div class="calendar-day"></div>
+                            
+                            <!-- Calendar days -->
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">1</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">2</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">3</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">4</span>
+                            </div>
+                            
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">5</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer bg-primary text-white">
+                                <span class="text-sm">6</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">7</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">8</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">9</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">10</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">11</span>
+                            </div>
+                            
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">12</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">13</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">14</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">15</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">16</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">17</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">18</span>
+                            </div>
+                            
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">19</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">20</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">21</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">22</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">23</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">24</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">25</span>
+                            </div>
+                            
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">26</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">27</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">28</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">29</span>
+                            </div>
+                            <div class="calendar-day border rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-50 cursor-pointer">
+                                <span class="text-sm">30</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Time Slots -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Время занятий (7:00 - 24:00)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Time Slot Column 1 -->
+                            <div>
+                                <div class="flex items-center mb-2">
+                                    <div class="w-1/4 text-sm font-medium text-gray-500">Время</div>
+                                    <div class="w-3/4 text-sm font-medium text-gray-500">Статус</div>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">07:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-secondary rounded-lg flex items-center justify-center text-xs text-gray-500">
+                                                Свободно
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">08:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-secondary rounded-lg flex items-center justify-center text-xs text-gray-500">
+                                                Свободно
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">09:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-primary rounded-lg flex items-center justify-center text-xs text-white">
+                                                Занято
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">10:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-secondary rounded-lg flex items-center justify-center text-xs text-gray-500">
+                                                Свободно
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">11:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-primary rounded-lg flex items-center justify-center text-xs text-white">
+                                                Занято
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">12:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-secondary rounded-lg flex items-center justify-center text-xs text-gray-500">
+                                                Свободно
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Time Slot Column 2 -->
+                            <div>
+                                <div class="flex items-center mb-2">
+                                    <div class="w-1/4 text-sm font-medium text-gray-500">Время</div>
+                                    <div class="w-3/4 text-sm font-medium text-gray-500">Статус</div>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">13:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-secondary rounded-lg flex items-center justify-center text-xs text-gray-500">
+                                                Свободно
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">14:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-primary rounded-lg flex items-center justify-center text-xs text-white">
+                                                Занято
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">15:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-secondary rounded-lg flex items-center justify-center text-xs text-gray-500">
+                                                Свободно
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">16:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-secondary rounded-lg flex items-center justify-center text-xs text-gray-500">
+                                                Свободно
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">17:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-primary rounded-lg flex items-center justify-center text-xs text-white">
+                                                Занято
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center time-slot">
+                                        <div class="w-1/4 text-sm">18:00</div>
+                                        <div class="w-3/4">
+                                            <div class="h-8 bg-secondary rounded-lg flex items-center justify-center text-xs text-gray-500">
+                                                Свободно
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bookings List -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Бронирования</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Booking Card 1 -->
+                        <div class="border rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between">
+                            <div>
+                                <div class="font-semibold text-gray-800">12 июня 2025, 14:00 - 15:30</div>
+                                <div class="text-gray-600">Анна Иванова • Математика</div>
+                            </div>
+                            <button class="mt-2 md:mt-0 bg-accent text-white px-4 py-2 rounded-lg flex items-center">
+                                <i class="fas fa-times mr-2"></i>
+                                Отменить
+                            </button>
+                        </div>
+                        
+                        <!-- Booking Card 2 -->
+                        <div class="border rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between">
+                            <div>
+                                <div class="font-semibold text-gray-800">14 июня 2025, 09:00 - 10:30</div>
+                                <div class="text-gray-600">Михаил Петров • Физика</div>
+                            </div>
+                            <button class="mt-2 md:mt-0 bg-accent text-white px-4 py-2 rounded-lg flex items-center">
+                                <i class="fas fa-times mr-2"></i>
+                                Отменить
+                            </button>
+                        </div>
+                        
+                        <!-- Booking Card 3 -->
+                        <div class="border rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between">
+                            <div>
+                                <div class="font-semibold text-gray-800">16 июня 2025, 17:00 - 18:30</div>
+                                <div class="text-gray-600">Елена Сидорова • Химия</div>
+                            </div>
+                            <button class="mt-2 md:mt-0 bg-accent text-white px-4 py-2 rounded-lg flex items-center">
+                                <i class="fas fa-times mr-2"></i>
+                                Отменить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lessons Tab -->
+            <div id="lessons" class="tab-content">
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">История уроков</h2>
+                        
+                        <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+                            <div class="relative">
+                                <select class="bg-white border border-gray-300 rounded-lg py-2 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option>Все даты</option>
+                                    <option>За неделю</option>
+                                    <option>За месяц</option>
+                                    <option>За год</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="relative">
+                                <select class="bg-white border border-gray-300 rounded-lg py-2 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option>Все статусы</option>
+                                    <option>Завершён</option>
+                                    <option>Запланирован</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lessons Table -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ученик</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Предмет</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10.06.2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Анна Иванова</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Математика</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Завершён
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-primary hover:text-primary-dark">
+                                            Загрузить материалы
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">08.06.2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Михаил Петров</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Физика</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Завершён
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-primary hover:text-primary-dark">
+                                            Загрузить материалы
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">05.06.2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Елена Сидорова</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Химия</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            Запланирован
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-primary hover:text-primary-dark">
+                                            Загрузить материалы
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">03.06.2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Дмитрий Козлов</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Биология</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Завершён
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button class="text-primary hover:text-primary-dark">
+                                            Загрузить материалы
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Additional Lessons -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Запланированные уроки</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="border rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between">
+                            <div>
+                                <div class="font-semibold text-gray-800">15 июня 2025, 10:00 - 11:30</div>
+                                <div class="text-gray-600">Анна Иванова • Математика</div>
+                            </div>
+                            <div class="mt-2 md:mt-0">
+                                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Запланирован</span>
+                            </div>
+                        </div>
+                        
+                        <div class="border rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between">
+                            <div>
+                                <div class="font-semibold text-gray-800">17 июня 2025, 14:00 - 15:30</div>
+                                <div class="text-gray-600">Михаил Петров • Физика</div>
+                            </div>
+                            <div class="mt-2 md:mt-0">
+                                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Запланирован</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Tab -->
+            <div id="chat" class="tab-content">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <!-- Chat List -->
+                    <div class="w-full lg:w-1/3 bg-white rounded-xl shadow-md p-4">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Чаты</h2>
+                        
+                        <div class="space-y-3">
+                            <!-- Chat Item 1 -->
+                            <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer border border-primary">
+                                <div class="relative">
+                                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-600"></i>
+                                    </div>
+                                    <div class="absolute top-0 right-0 w-3 h-3 bg-primary rounded-full"></div>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-800">Анна Иванова</div>
+                                    <div class="text-sm text-gray-500 truncate">Спасибо за урок! Очень помогло...</div>
+                                </div>
+                                <div class="text-xs text-gray-400">12:45</div>
+                            </div>
+                            
+                            <!-- Chat Item 2 -->
+                            <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <div class="relative">
+                                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-600"></i>
+                                    </div>
+                                    <div class="absolute top-0 right-0 w-3 h-3 bg-primary rounded-full"></div>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-800">Михаил Петров</div>
+                                    <div class="text-sm text-gray-500 truncate">Когда будет следующий урок?</div>
+                                </div>
+                                <div class="text-xs text-gray-400">Вчера</div>
+                            </div>
+                            
+                            <!-- Chat Item 3 -->
+                            <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <div class="relative">
+                                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-600"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-800">Елена Сидорова</div>
+                                    <div class="text-sm text-gray-500 truncate">Могу ли я получить материалы?</div>
+                                </div>
+                                <div class="text-xs text-gray-400">Пн</div>
+                            </div>
+                            
+                            <!-- Chat Item 4 -->
+                            <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <div class="relative">
+                                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-600"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <div class="font-semibold text-gray-800">Дмитрий Козлов</div>
+                                    <div class="text-sm text-gray-500 truncate">Спасибо за объяснение!</div>
+                                </div>
+                                <div class="text-xs text-gray-400">12.06</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Window -->
+                    <div class="flex-1 bg-white rounded-xl shadow-md flex flex-col">
+                        <div class="p-4 border-b">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <i class="fas fa-user text-gray-600"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="font-semibold text-gray-800">Анна Иванова</div>
+                                    <div class="text-xs text-gray-500">онлайн</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 p-4 overflow-y-auto">
+                            <!-- Received Message -->
+                            <div class="message-received p-3 mb-4">
+                                <div class="text-gray-800">Здравствуйте! Спасибо за вчерашний урок. Очень помогло разобраться с производными.</div>
+                                <div class="text-xs text-gray-500 mt-1 text-right">12:30</div>
+                            </div>
+                            
+                            <!-- Sent Message -->
+                            <div class="message-sent p-3 mb-4">
+                                <div class="text-gray-800">Здравствуйте, Анна! Рад, что урок был полезен. Если возникнут вопросы - обращайтесь!</div>
+                                <div class="text-xs text-gray-500 mt-1 text-right">12:35</div>
+                            </div>
+                            
+                            <!-- Received Message -->
+                            <div class="message-received p-3 mb-4">
+                                <div class="text-gray-800">Можно ли получить дополнительные материалы по теме?</div>
+                                <div class="text-xs text-gray-500 mt-1 text-right">12:40</div>
+                            </div>
+                            
+                            <!-- Sent Message -->
+                            <div class="message-sent p-3 mb-4">
+                                <div class="text-gray-800">Конечно! Отправлю вам методичку по производным в течение дня.</div>
+                                <div class="text-xs text-gray-500 mt-1 text-right">12:42</div>
+                            </div>
+                            
+                            <!-- Received Message -->
+                            <div class="message-received p-3">
+                                <div class="text-gray-800">Спасибо большое!</div>
+                                <div class="text-xs text-gray-500 mt-1 text-right">12:45</div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 border-t">
+                            <div class="flex">
+                                <input type="text" class="flex-1 border rounded-l-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Введите сообщение...">
+                                <button class="bg-primary text-white px-4 py-2 rounded-r-lg">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <!-- Stat Card 1 -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-blue-100 text-primary">
+                                <i class="fas fa-graduation-cap text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-gray-500">Всего уроков</div>
+                                <div class="text-2xl font-bold text-gray-800">50</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Stat Card 2 -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-green-100 text-success">
+                                <i class="fas fa-ruble-sign text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-gray-500">Доход</div>
+                                <div class="text-2xl font-bold text-gray-800">25 000 ₽</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Stat Card 3 -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-lg bg-yellow-100 text-warning">
+                                <i class="fas fa-star text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-gray-500">Рейтинг</div>
+                                <div class="text-2xl font-bold text-gray-800">4.8</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Lessons Chart -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Количество уроков по месяцам</h3>
+                        <div class="h-64 flex items-end space-x-2">
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="w-full bg-primary rounded-t" style="height: 60%"></div>
+                                <div class="text-xs text-gray-500 mt-2">Апр</div>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="w-full bg-primary rounded-t" style="height: 75%"></div>
+                                <div class="text-xs text-gray-500 mt-2">Май</div>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="w-full bg-primary rounded-t" style="height: 90%"></div>
+                                <div class="text-xs text-gray-500 mt-2">Июн</div>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="w-full bg-primary rounded-t" style="height: 65%"></div>
+                                <div class="text-xs text-gray-500 mt-2">Июл</div>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="w-full bg-primary rounded-t" style="height: 80%"></div>
+                                <div class="text-xs text-gray-500 mt-2">Авг</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Income Chart -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Доход по месяцам</h3>
+                        <div class="h-64 flex items-end space-x-2">
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="w-full bg-primary rounded-t" style="height: 50%"></div>
+                                <div class="text-xs text-gray-500 mt-2">Апр</div>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="w-full bg-primary rounded-t" style="height: 70%"></div>
+                                <div class="text-xs text-gray-500 mt-2">Май</div>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="w-full bg-primary rounded-t" style="height: 85%"></div>
+                                <div class="text-xs text-gray-500 mt-2">Июн</div>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="w-full bg-primary rounded-t" style="height: 60%"></div>
+                                <div class="text-xs text-gray-500 mt-2">Июл</div>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="w-full bg-primary rounded-t" style="height: 75%"></div>
+                                <div class="text-xs text-gray-500 mt-2">Авг</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Achievements -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Достижения</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Achievement 1 -->
+                        <div class="achievement-badge border rounded-lg p-4 flex flex-col items-center text-center">
+                            <div class="w-16 h-16 rounded-full bg-blue-100 text-primary flex items-center justify-center mb-3">
+                                <i class="fas fa-graduation-cap text-2xl"></i>
+                            </div>
+                            <h4 class="font-semibold text-gray-800">100 уроков</h4>
+                            <p class="text-sm text-gray-500 mt-1">Проведено 100 уроков</p>
+                        </div>
+                        
+                        <!-- Achievement 2 -->
+                        <div class="achievement-badge border rounded-lg p-4 flex flex-col items-center text-center">
+                            <div class="w-16 h-16 rounded-full bg-blue-100 text-primary flex items-center justify-center mb-3">
+                                <i class="fas fa-star text-2xl"></i>
+                            </div>
+                            <h4 class="font-semibold text-gray-800">Рейтинг 5.0</h4>
+                            <p class="text-sm text-gray-500 mt-1">Высокий рейтинг учеников</p>
+                        </div>
+                        
+                        <!-- Achievement 3 -->
+                        <div class="achievement-badge border rounded-lg p-4 flex flex-col items-center text-center">
+                            <div class="w-16 h-16 rounded-full bg-blue-100 text-primary flex items-center justify-center mb-3">
+                                <i class="fas fa-calendar-check text-2xl"></i>
+                            </div>
+                            <h4 class="font-semibold text-gray-800">Пунктуальность</h4>
+                            <p class="text-sm text-gray-500 mt-1">100% соблюдение расписания</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Настройки профиля</h2>
+                    
+                    <form class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" class="w-full border rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-primary" value="anna.ivanova@example.com">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
+                            <input type="tel" class="w-full border rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-primary" value="+7 (999) 123-45-67">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Описание</label>
+                            <textarea class="w-full border rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-primary" rows="4">Преподаватель математики с 5-летним стажем. Помогу разобраться в любой теме!</textarea>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Уведомления</h3>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="reminders" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                                    <label for="reminders" class="ml-2 block text-sm text-gray-700">Напоминания о занятиях</label>
+                                </div>
+                                
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="chat-notifications" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                                    <label for="chat-notifications" class="ml-2 block text-sm text-gray-700">Уведомления в чате</label>
+                                </div>
+                                
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="newsletters" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                    <label for="newsletters" class="ml-2 block text-sm text-gray-700">Новости и обновления</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-4">
+                            <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg">
+                                Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-background py-6 px-4 border-t">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-sm text-gray-500 mb-4 md:mb-0">
+                    © 2025 Учитель Рядом. Все права защищены.
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-primary hover:underline text-sm">Поддержка</a>
+                    <a href="#" class="text-primary hover:underline text-sm">Политика конфиденциальности</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and content
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.classList.remove('bg-primary', 'text-white');
+                    btn.classList.add('text-gray-700');
+                });
+                
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Add active class to clicked button
+                button.classList.add('active');
+                button.classList.add('bg-primary', 'text-white');
+                button.classList.remove('text-gray-700');
+                
+                // Show corresponding content
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+                
+                // Close mobile menu if open
+                document.querySelector('.sidebar').classList.remove('active');
+                document.getElementById('mobile-menu-overlay').classList.remove('active');
+            });
+        });
+        
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.getElementById('mobile-menu-overlay').classList.toggle('active');
+        });
+        
+        // Close mobile menu when clicking overlay
+        document.getElementById('mobile-menu-overlay').addEventListener('click', () => {
+            document.querySelector('.sidebar').classList.remove('active');
+            document.getElementById('mobile-menu-overlay').classList.remove('active');
+        });
+    </script>
+</body>
+</html>
